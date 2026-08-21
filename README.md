@@ -2,6 +2,11 @@
 
 This is a streamlit app that calls relevant AI laws based on user input. Input includes jurisdiction, status, relevant content. 
 
+## Live App
+(Need to add hugging face space link here when we get there)
+
+## GitHub Repository
+https://github.com/hmccormack1/AI-law-tracker.git
 
 ## Getting Started
 
@@ -13,14 +18,10 @@ This is a streamlit app that calls relevant AI laws based on user input. Input i
 ### Installation
 
 Install the required packages with:
-
 pip install -r requirements.txt
 
-
-## Running the Program
-
-Run the program with:
-python3 law_tracker.py
+## Running the Program Locally
+streamlit run law_tracker.py
 
 Run the app via streamlit integration in hugging face. It will ask for three parameters (jurisdiction, status, q) and respond with relevant legal records. 
 
