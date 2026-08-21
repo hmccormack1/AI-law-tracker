@@ -24,3 +24,4 @@ python3 law_tracker.py
 
 Run the app via streamlit integration in hugging face. It will ask for three parameters (jurisdiction, status, q) and respond with relevant legal records. 
 
+ 
