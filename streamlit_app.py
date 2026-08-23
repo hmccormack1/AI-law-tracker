@@ -2,7 +2,9 @@ import pandas as pd
 import requests
 import streamlit as st
 
-from law_tracker import get_laws, API_KEY
+from law_tracker import get_laws, LAW_AI_TRACKER_API_KEY
+from config import PAGE_SIZE
+
 
 # ----------------------------------------------------------------
 # Intro - tell the user what this app does before asking for anything
@@ -19,6 +21,15 @@ st.write(
     """
 )
 
+
+# Set session variables for pagination
+if "page" not in st.session_state:
+    st.session_state.page = 0
+
+if "search" not in st.session_state:
+    st.session_state.search = None
+
+
 # ----------------------------------------------------------------
 # Load the list of US jurisdictions (all 50 states + US-Federal) once per
 # session, so the dropdown below has real options instead of free text.
@@ -29,7 +40,7 @@ st.write(
 @st.cache_data
 def load_us_jurisdictions():
     url = "https://ai-law-tracker.com/api/v1/jurisdictions"
-    headers = {"X-API-Key": API_KEY}
+    headers = {"X-API-Key": LAW_AI_TRACKER_API_KEY}
     response = requests.get(url, headers=headers)
 
     if response.status_code != 200:
@@ -78,56 +89,117 @@ go = st.button("Go")
 # On "Go", call the API and show the results as a table
 # ----------------------------------------------------------------
 
+# When go but is hit, return to first page
 if go:
     if not selected_names:
         st.warning("Please select at least one state or US-Federal first.")
     else:
-        # Turn the friendly names the user picked back into the slugs the
-        # API expects. Passing a list here searches all of them at once.
         selected_slugs = [name_to_slug[name] for name in selected_names]
 
-        result = get_laws(
-            jurisdiction=selected_slugs,
-            status=status.strip(),
-            keyword=keyword.strip(),
+        st.session_state.search = {
+            "jurisdiction": selected_slugs,
+            "status": status.strip(),
+            "keyword": keyword.strip(),
+        }
+
+        st.session_state.page = 0
+
+
+# Show results whenever a search has been submitted.
+# This remains true when Previous / Next cause Streamlit to rerun.
+if st.session_state.search is not None:
+    search = st.session_state.search
+    offset = st.session_state.page * PAGE_SIZE
+
+    result = get_laws(
+        jurisdiction=search["jurisdiction"],
+        status=search["status"],
+        keyword=search["keyword"],
+        limit=PAGE_SIZE,
+        offset=offset,
+    )
+
+    if result is None:
+        st.error(
+            "Something went wrong calling the API. "
+            "Check your API key or inputs and try again."
         )
 
-        if result is None:
-            st.error("Something went wrong calling the API. Check your API key or inputs and try again.")
+    else:
+        laws = result["data"]
+        meta = result["meta"]
+
+        total = meta["total"]
+        limit = meta["limit"]
+
+        if not laws:
+            st.info(
+                "No laws found matching your search. "
+                "Try different filters."
+            )
+
         else:
-            laws = result["data"]
-            total = result["meta"]["total"]
+            # Calculate number of pages.
+            total_pages = (total + limit - 1) // limit
+            current_page = st.session_state.page + 1
 
-            if not laws:
-                st.info("No laws found matching your search. Try different filters.")
-            else:
-                st.write(f"Found **{total}** matching law(s):")
+            st.write(
+                f"Found **{total}** matching law(s) — "
+                f"Page **{current_page} of {total_pages}**"
+            )
 
-                # Build a simple table with just the columns we care about.
-                # The nested "jurisdiction" field is a dict, so we pull out
-                # just its "name" to keep the table flat and readable.
-                table_rows = []
-                for law in laws:
-                    table_rows.append({
-                        "Jurisdiction": law["jurisdiction"]["name"],
-                        "Identifier": law["identifier"],
-                        "Title": law["title"],
-                        "Status": law["status"],
-                        "Updated": law["updated_at"],
-                        "Source": law["official_url"],
-                    })
+            # Build table
+            table_rows = []
 
-                df = pd.DataFrame(table_rows)
+            for law in laws:
+                table_rows.append({
+                    "Jurisdiction": law["jurisdiction"]["name"],
+                    "Identifier": law["identifier"],
+                    "Title": law["title"],
+                    "Status": law["status"],
+                    "Updated": law["updated_at"],
+                    "Source": law["official_url"],
+                })
 
-                # create a streamlit dataframe from the flattened API response
-                # use Streamlit's new column_config feature to make the "Source" column a clickable link
-                st.dataframe(
-                    df,
-                    column_config={
-                        "Source": st.column_config.LinkColumn("Source", display_text="View bill"),
-                    },
-                    hide_index=True,
+            df = pd.DataFrame(table_rows)
+
+            st.dataframe(
+                df,
+                column_config={
+                    "Source": st.column_config.LinkColumn(
+                        "Source",
+                        display_text="View bill",
+                    ),
+                },
+                hide_index=True,
+            )
+
+            # Pagination controls
+            prev_col, page_col, next_col = st.columns([1, 2, 1])
+
+            with prev_col:
+                if st.button(
+                    "← Previous",
+                    disabled=st.session_state.page == 0
+                ):
+                    st.session_state.page -= 1
+                    st.rerun()
+
+            with page_col:
+                st.markdown(
+                    f"<div style='text-align: center;'>"
+                    f"Page {current_page} of {total_pages}"
+                    f"</div>",
+                    unsafe_allow_html=True
                 )
+
+            with next_col:
+                if st.button(
+                    "Next →",
+                    disabled=current_page >= total_pages
+                ):
+                    st.session_state.page += 1
+                    st.rerun()
 
 # ----------------------------------------------------------------
 # Footer - attribution (required by the API's free tier terms) and
