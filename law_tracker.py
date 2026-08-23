@@ -1,14 +1,19 @@
 import os
 import requests
+
+from typing import List
 from dotenv import load_dotenv
+
 
 # Load API key
 load_dotenv()
-API_KEY = os.getenv("API_KEY")
+LAW_AI_TRACKER_API_KEY = os.getenv("LAW_AI_TRACKER_API_KEY")
 
-def get_laws(jurisdiction, status, keyword):
+
+def get_laws(jurisdiction: List[str], status: str, keyword: str, limit: int = 25, offset: int = 0):
     """
     Fetch the relevant AI laws based on the jurisdiction, status, and relevant content inputted by the user.
+    Limit and offset control the chunk of data that is being fetched.
 
     Returns the parsed API response as a dict if the call succeeds, or None
     if something went wrong (bad API key, bad filters, network issue, etc).
@@ -21,11 +26,13 @@ def get_laws(jurisdiction, status, keyword):
     params = {
         "jurisdiction": jurisdiction,
         "status": status,
-        "q": keyword
+        "q": keyword,
+        "limit": limit,
+        "offset": offset
     }
 
     headers = {
-        "X-API-Key": API_KEY
+        "X-API-Key": LAW_AI_TRACKER_API_KEY
     }
 
     # Send request
@@ -39,6 +46,7 @@ def get_laws(jurisdiction, status, keyword):
     data = response.json()
 
     return data
+
 
 if __name__ == "__main__":
     jurisdiction = input("Jurisdiction:")
