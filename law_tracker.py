@@ -46,15 +46,3 @@ def get_laws(jurisdiction: List[str], status: str, keyword: str, limit: int = 25
     data = response.json()
 
     return data
-
-
-if __name__ == "__main__":
-    jurisdiction = input("Jurisdiction:")
-    status = input("Status:")
-    keyword = input("Key word:")
-    laws = get_laws(jurisdiction, status, keyword)
-
-    if laws is None:
-        print("Something went wrong fetching laws. Check your API key and filters.")
-    else:
-        print(laws)
