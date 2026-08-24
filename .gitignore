@@ -219,3 +219,6 @@ __marimo__/
 
 # IDE
 .idea/
+
+# Metadata
+.DS_Store
