@@ -21,8 +21,12 @@ Install the required packages with:
 pip install -r requirements.txt
 
 ## Running the Program Locally
-streamlit run law_tracker.py
+streamlit run streamlit_app.py
 
 Run the app via streamlit integration in hugging face. It will ask for three parameters (jurisdiction, status, q) and respond with relevant legal records. 
 
- 
+## Running the CLI Demo
+Run the API from the command line with:
+
+ ```bash
+ python3 cli_demo.py
