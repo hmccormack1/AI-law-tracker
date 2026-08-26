@@ -3,7 +3,7 @@
 This is a streamlit app that calls relevant AI laws based on user input. Input includes jurisdiction, status, relevant content. 
 
 ## Live App
-(Need to add hugging face space link here when we get there)
+https://ai-law-tracker-btolsik9xb8zharp84dcny.streamlit.app/
 
 ## GitHub Repository
 https://github.com/hmccormack1/AI-law-tracker.git
