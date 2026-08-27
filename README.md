@@ -2,6 +2,8 @@
 
 This is a streamlit app that calls relevant AI laws based on user input. Input includes jurisdiction, status, relevant content. 
 
+<img src="images.jpg" width="500" alt="Img">
+
 ## Live App
 https://ai-law-tracker-btolsik9xb8zharp84dcny.streamlit.app/
 
